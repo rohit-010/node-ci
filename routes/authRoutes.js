@@ -5,7 +5,11 @@ module.exports = app => {
     '/auth/google',
     passport.authenticate('google', {
       scope: ['profile', 'email']
-    })
+    }),
+    () => {
+      console.log('/auth/google route visited');
+    },
+    
   );
 
   app.get(

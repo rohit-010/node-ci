@@ -8,9 +8,22 @@ const keys = require('./config/keys');
 require('./models/User');
 require('./models/Blog');
 require('./services/passport');
+require('./services/cache');
 
-mongoose.Promise = global.Promise;
-mongoose.connect(keys.mongoURI, { useMongoClient: true });
+//mongoose.Promise = global.Promise;
+console.log('keys.mongoURI:',keys.mongoURI);
+const start = async() => {
+  try{
+    await mongoose.connect(keys.mongoURI);
+    console.log('Connected to mongo db');
+  }
+  catch(err){
+    console.error(err);
+  }
+}
+
+start();
+//mongoose.connect(keys.mongoURI, { useMongoClient: true });
 
 const app = express();
 
@@ -21,13 +34,14 @@ app.use(
     keys: [keys.cookieKey]
   })
 );
-app.use(passport.initialize());
-app.use(passport.session());
+ app.use(passport.initialize());
+ app.use(passport.session());
+app.use(passport.authenticate('session'));
 
 require('./routes/authRoutes')(app);
 require('./routes/blogRoutes')(app);
 
-if (['production'].includes(process.env.NODE_ENV)) {
+if (['production','ci'].includes(process.env.NODE_ENV)) {
   app.use(express.static('client/build'));
 
   const path = require('path');
@@ -36,7 +50,7 @@ if (['production'].includes(process.env.NODE_ENV)) {
   });
 }
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5100; 
 app.listen(PORT, () => {
   console.log(`Listening on port`, PORT);
 });
